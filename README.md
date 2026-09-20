@@ -1,5 +1,3 @@
-# computing-test-plat
-
 # kvm-validation-suite
 
 A small, test-driven toolkit for validating a Linux virtualization stack end to end:
