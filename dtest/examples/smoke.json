@@ -1,0 +1,11 @@
+{
+  "name": "smoke",
+  "defaults": { "timeout_s": 10, "retries": 1 },
+  "tasks": [
+    { "name": "hello",       "argv": ["/bin/sh", "-c", "echo hello from $(hostname)"] },
+    { "name": "burst",       "argv": ["/bin/sh", "-c", "sleep 0.2"], "repeat": 6 },
+    { "name": "exit-code",   "argv": ["/bin/sh", "-c", "echo 'assertion failed: expected 4, got 5' >&2; exit 1"] },
+    { "name": "hangs",       "argv": ["/bin/sh", "-c", "sleep 60"], "timeout_s": 1, "retries": 0 },
+    { "name": "needs-a-gpu", "argv": ["/bin/true"], "requires": ["gpu=true"] }
+  ]
+}

@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package dtest.v1;
+
+// An agent runs on every test host. The controller asks it to run commands and
+// reports what came back. The agent never decides pass/fail: it reports facts
+// (how the process ended) and the controller applies policy.
+service Agent {
+  // Describes the host: how many tasks it can run at once and what it can do.
+  rpc GetInfo(InfoRequest) returns (InfoReply);
+  // Runs one command to completion (or until its timeout) and returns the result.
+  rpc RunTask(RunTaskRequest) returns (RunTaskReply);
+}
+
+message InfoRequest {}
+
+message InfoReply {
+  string hostname = 1;
+  uint32 cpus = 2;
+  uint32 slots = 3;            // max concurrent tasks this agent accepts
+  repeated string labels = 4;  // capabilities as "key=value", e.g. "kvm=true"
+  string version = 5;
+}
+
+message RunTaskRequest {
+  string task_id = 1;              // for logging only
+  repeated string argv = 2;        // argv[0] must be allowed by the agent's policy
+  map<string, string> env = 3;     // added to a minimal clean environment
+  uint32 timeout_ms = 4;           // 0 is rejected
+}
+
+message RunTaskReply {
+  enum Outcome {
+    OUTCOME_UNSPECIFIED = 0;
+    EXITED = 1;         // process exited; see exit_code
+    SIGNALED = 2;       // killed by a signal it did not expect; see term_signal
+    TIMED_OUT = 3;      // exceeded timeout_ms and was killed
+    LAUNCH_FAILED = 4;  // could not start (missing binary, permissions, ...)
+  }
+  Outcome outcome = 1;
+  int32 exit_code = 2;
+  int32 term_signal = 3;
+  bytes stdout_data = 4;
+  bytes stderr_data = 5;
+  bool output_truncated = 6;
+  uint32 duration_ms = 7;
+  string message = 8;   // human-readable detail for LAUNCH_FAILED etc.
+}
